@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Area of a Parallelogram - Visual Proof</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #0a0a0f;
+            --panel: #0e0e16;
+            --panel-header: #12121c;
+            --card-bg: rgba(255,255,255,0.02);
+            --card-active: rgba(255,255,255,0.05);
+            --accent: #5b9cf5;
+            --gold: #f0c456;
+            --rose: #f06575;
+            --green: #5ce0a0;
+            --purple: #b48ef5;
+            --text: #d0d3e0;
+            --text-dim: #555870;
+            --border: rgba(255,255,255,0.05);
+            --focus-ring: rgba(91,156,245,0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        /* ── CANVAS SIDE — 3-zone vertical stack ── */
+        #vis {
+            flex: 1 1 60%;
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: #06060c;
+            overflow: hidden;
+        }
+
+        #eq-bar {
+            flex-shrink: 0;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-dim);
+            background: rgba(8,8,14,0.6);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            transition: color 0.4s;
+        }
+        #eq-bar.active { color: #fff; }
+
+        #canvas-wrap {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        #canvas-wrap canvas { display: block; position: absolute; top: 0; left: 0; }
+
+        .c-a { color: var(--accent); }
+        .c-b { color: var(--gold); }
+        .c-r { color: var(--rose); }
+        .c-g { color: var(--green); }
+        .c-p { color: var(--purple); }
+        .c-dim { color: var(--text-dim); }
+
+        #controls {
+            flex-shrink: 0;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(8,8,14,0.6);
+            border-top: 1px solid var(--border);
+        }
+        .ctrl-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.6);
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .ctrl-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 220px; height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(91,156,245,0.4);
+        }
+
+        /* ── PANEL SIDE ── */
+        #panel {
+            flex: 0 0 clamp(300px, 35vw, 500px);
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel-header);
+            flex-shrink: 0;
+        }
+        #panel-header h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+        #panel-header .sub {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            margin-top: 3px;
+        }
+
+        #scenario-banner {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.015);
+            flex-shrink: 0;
+        }
+        #scenario-banner .title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+        #scenario-banner .desc {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+        #scenario-banner .given {
+            margin-top: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .given-tag {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .given-tag.blue  { background: rgba(91,156,245,0.12);  color: var(--accent); }
+        .given-tag.gold  { background: rgba(240,196,86,0.12);  color: var(--gold); }
+        .given-tag.rose  { background: rgba(240,101,117,0.12); color: var(--rose); }
+        .given-tag.green { background: rgba(92,224,160,0.12);  color: var(--green); }
+        .given-tag.purple{ background: rgba(180,142,245,0.12); color: var(--purple); }
+
+        /* Steps timeline */
+        #steps {
+            flex: 1;
+            padding: 16px 0 16px 24px;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        #steps::-webkit-scrollbar { width: 3px; }
+        #steps::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+        .step {
+            display: flex;
+            gap: 14px;
+            padding-right: 24px;
+            opacity: 0.25;
+            transition: opacity 0.4s ease, background 0.2s;
+            margin-bottom: 4px;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        .step:hover { opacity: 0.7 !important; }
+        .step:hover .step-content {
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.07);
+        }
+        .step.revealed { opacity: 0.55; }
+        .step.active { opacity: 1; }
+
+        .step-timeline {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 28px;
+            flex-shrink: 0;
+        }
+        .step-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            border: 2px solid rgba(255,255,255,0.1);
+            color: var(--text-dim);
+            background: var(--panel);
+            transition: all 0.4s ease;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+        .step:hover .step-dot {
+            border-color: rgba(255,255,255,0.3);
+            color: var(--text);
+            transform: scale(1.1);
+        }
+        .step.active .step-dot {
+            border-color: var(--accent);
+            color: #fff;
+            background: rgba(91,156,245,0.15);
+            box-shadow: 0 0 12px rgba(91,156,245,0.25);
+        }
+        .step.revealed .step-dot {
+            border-color: rgba(255,255,255,0.2);
+            color: var(--text);
+        }
+        .step.completed .step-dot {
+            border-color: var(--green);
+            color: var(--green);
+            background: rgba(92,224,160,0.08);
+        }
+        .step-line {
+            width: 2px;
+            flex: 1;
+            min-height: 12px;
+            background: rgba(255,255,255,0.05);
+            transition: background 0.4s;
+        }
+        .step.revealed .step-line,
+        .step.completed .step-line { background: rgba(255,255,255,0.1); }
+        .step.active .step-line { background: rgba(91,156,245,0.2); }
+
+        .step-content {
+            flex: 1;
+            padding: 10px 14px 14px;
+            border-radius: 10px;
+            margin-bottom: 4px;
+            border: 1px solid transparent;
+            transition: all 0.4s ease;
+        }
+        .step.active .step-content {
+            background: var(--card-active);
+            border-color: rgba(91,156,245,0.12);
+        }
+        .step-title {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+            color: var(--text-dim);
+            transition: color 0.4s;
+        }
+        .step.active .step-title { color: var(--accent); }
+
+        .step-body {
+            font-size: 0.84rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .step-equation {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: rgba(0,0,0,0.25);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        #eq-builder {
+            padding: 14px 24px;
+            border-top: 1px solid var(--border);
+            background: var(--panel-header);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: center;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--text-dim);
+            transition: color 0.4s;
+            flex-shrink: 0;
+        }
+        #eq-builder.active { color: var(--text); }
+
+        #nav {
+            padding: 12px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-header);
+            flex-shrink: 0;
+        }
+        .nav-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text);
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.8rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
+        .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; }
+        #nav-label { font-size: 0.78rem; color: var(--text-dim); font-weight: 500; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            #vis { flex: 0 0 45vh; min-height: 250px; }
+            #panel {
+                flex: 1 1 auto;
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+            #controls { padding: 6px 16px; gap: 8px; }
+            input[type=range] { width: 160px; }
+            #eq-bar { font-size: 0.9rem; padding: 8px 18px; }
+        }
+        @media (max-width: 600px) {
+            #vis { flex: 0 0 38vh; min-height: 200px; }
+            #panel-header { padding: 14px 16px; }
+            #scenario-banner { padding: 12px 16px; }
+            #steps { padding-left: 16px; }
+            .step { padding-right: 16px; }
+            #eq-builder { padding: 10px 16px; }
+            #nav { padding: 10px 16px; }
+            input[type=range] { width: 120px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="vis">
+    <div id="eq-bar">Area of Parallelogram = base &times; height</div>
+    <div id="canvas-wrap"><canvas id="c"></canvas></div>
+    <div id="controls">
+        <button class="ctrl-btn" id="btn-play" aria-label="Play or pause" title="Play/Pause">&#9208;</button>
+        <button class="ctrl-btn" id="btn-replay" aria-label="Replay" title="Replay">&#8634;</button>
+        <input type="range" id="scrubber" min="0" max="1" step="0.001" value="0" aria-label="Animation progress">
+    </div>
+</div>
+
+<div id="panel">
+    <div id="panel-header">
+        <h1>Area of a Parallelogram</h1>
+        <div class="sub">Animated Visual Proof</div>
+    </div>
+    <div id="scenario-banner"></div>
+    <div id="steps" role="list" aria-label="Proof steps"></div>
+    <div id="eq-builder"></div>
+    <div id="nav">
+        <button class="nav-btn" id="btn-prev" aria-label="Previous example">&larr; Prev</button>
+        <span id="nav-label">1 / 10</span>
+        <button class="nav-btn" id="btn-next" aria-label="Next example">Next &rarr;</button>
+    </div>
+</div>
+
+<script>
+// ================================================================
+// CONFIG
+// ================================================================
+const CFG = {
+    dur: 20,
+    padRatio: 0.30,
+    padMin: 0.6,
+    padMax: 5,
+    padMinPx: 30,
+    particleCount: 50,
+    dotRadius: 0.32,
+};
+
+// ================================================================
+// DATA
+// ================================================================
+const EXAMPLES = [
+    { title:"The Classic",       desc:"The standard example. A balanced slant makes the transformation satisfying to watch.",         b:6, h:4, slant:2 },
+    { title:"Wide and Low",      desc:"Stretched horizontally — the triangle that slides is tall compared to its base.",              b:8, h:3, slant:3 },
+    { title:"Tall and Narrow",   desc:"A tall parallelogram close to a rectangle — notice how small the triangle cut is.",            b:4, h:6, slant:2 },
+    { title:"Nearly Square",     desc:"A gentle lean on a nearly-square shape. Very close to a rectangle already.",                   b:5, h:5, slant:1 },
+    { title:"Very Wide",         desc:"An extreme horizontal stretch — the cut triangle is large relative to the height.",            b:10, h:2, slant:4 },
+    { title:"Tower",             desc:"A very tall, narrow shape. The triangle slides a short distance to complete the rectangle.",   b:3, h:7, slant:2 },
+    { title:"Moderate Slant",    desc:"A comfortable middle ground — base, height, and slant all feel proportional.",                 b:7, h:4, slant:3 },
+    { title:"Gentle Lean",       desc:"Minimal slant on a 6×6 parallelogram — just barely not a rectangle.",                         b:6, h:6, slant:1 },
+    { title:"Long Base",         desc:"Three times as wide as it is tall, with a modest slant.",                                     b:9, h:3, slant:2 },
+    { title:"Steep Slant",       desc:"Large slant offset on a tall shape — the sliding triangle travels far to fill the gap.",      b:5, h:8, slant:3 },
+];
+
+// ================================================================
+// PHASE GENERATION
+// ================================================================
+function buildPhases(d) {
+    const { b, h, slant } = d;
+    const area = b * h;
+
+    return [
+        {
+            id: 'draw-para',
+            title: 'Draw the Parallelogram',
+            body: `We start with a <span class="c-a">parallelogram</span> with base <span class="c-a">b&nbsp;=&nbsp;${b}</span> and height <span class="c-a">h&nbsp;=&nbsp;${h}</span>. The top edge is shifted <span class="c-p">${slant}</span> units to the right.`,
+            eq: `<span class="c-a">base = ${b}</span> &nbsp; <span class="c-g">height = ${h}</span>`,
+            t: [0, 3.0]
+        },
+        {
+            id: 'label-dims',
+            title: 'Label the Dimensions',
+            body: `The <span class="c-b">base b&nbsp;=&nbsp;${b}</span> runs along the bottom. The <span class="c-g">height h&nbsp;=&nbsp;${h}</span> is the perpendicular distance between the top and bottom edges — shown as a dashed vertical line.`,
+            eq: `<span class="c-b">b = ${b}</span> &nbsp; <span class="c-g">h = ${h}</span>`,
+            t: [3.0, 5.5]
+        },
+        {
+            id: 'show-cut',
+            title: 'Show the Cut Line',
+            body: `Drop a <span class="c-r">vertical cut</span> from the top-left vertex straight down to the base. This line separates a right triangle on the left from the main body.`,
+            eq: `<span class="c-r">vertical cut at x = ${slant}</span>`,
+            t: [5.5, 8.0]
+        },
+        {
+            id: 'color-tri',
+            title: 'Color the Triangle',
+            body: `The cut creates a <span class="c-b">right triangle</span> on the left. Its vertices are (0,0), (${slant},0), and (${slant},${h}). This triangle has the same height as the parallelogram.`,
+            eq: `<span class="c-b">triangle: base = ${slant}, height = ${h}</span>`,
+            t: [8.0, 10.5]
+        },
+        {
+            id: 'slide-tri',
+            title: 'Slide the Triangle',
+            body: `<span class="c-b">Slide the triangle</span> from the left side all the way to the right. It travels a distance of <span class="c-a">b&nbsp;=&nbsp;${b}</span> units. The left gap is left behind — for now.`,
+            eq: `<span class="c-b">triangle slides</span> <span class="c-dim">&rarr;</span> <span class="c-a">${b} units right</span>`,
+            t: [10.5, 13.5]
+        },
+        {
+            id: 'form-rect',
+            title: 'Form the Rectangle',
+            body: `The triangle fits perfectly into the gap on the right side. Together they form a <span class="c-g">rectangle</span> — same base <span class="c-b">b&nbsp;=&nbsp;${b}</span>, same height <span class="c-g">h&nbsp;=&nbsp;${h}</span>.`,
+            eq: `<span class="c-a">parallelogram</span> <span class="c-dim">&rearr;</span> <span class="c-g">rectangle (same area)</span>`,
+            t: [13.5, 15.5]
+        },
+        {
+            id: 'measure-rect',
+            title: 'Measure the Rectangle',
+            body: `The rectangle is <span class="c-b">${b} wide</span> and <span class="c-g">${h} tall</span>. Its area is <span class="c-b">${b}</span>&nbsp;&times;&nbsp;<span class="c-g">${h}</span>&nbsp;=&nbsp;<span class="c-r">${area}</span> square units.`,
+            eq: `<span class="c-b">${b}</span> &times; <span class="c-g">${h}</span> = <span class="c-r">${area}</span>`,
+            t: [15.5, 18.0]
+        },
+        {
+            id: 'done',
+            title: 'The Identity',
+            body: `Since rearranging <em>preserves area</em>, the parallelogram has the same area as the rectangle: <strong>A&nbsp;=&nbsp;base&nbsp;&times;&nbsp;height</strong>. For any parallelogram, this identity holds.`,
+            eq: `<span class="c-a">A = b &times; h</span> = <span class="c-r">${area}</span> &nbsp; <span class="c-g">&check;</span>`,
+            t: [18.0, 20.0]
+        },
+    ];
+}
+
+// ================================================================
+// ENGINE
+// ================================================================
+let idx = 0;
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H, scl, ox, oy;
+const dpr = window.devicePixelRatio || 1;
+
+const CLR = {
+    BG:      '#08080e',
+    DOT:     'rgba(255,255,255,0.035)',
+    AXIS:    'rgba(255,255,255,0.07)',
+    BLUE:    '#5b9cf5', BG_BLUE:  'rgba(91,156,245,0.12)',  GL_BLUE:  'rgba(91,156,245,0.35)',
+    GOLD:    '#f0c456', BG_GOLD:  'rgba(240,196,86,0.12)',  GL_GOLD:  'rgba(240,196,86,0.35)',
+    ROSE:    '#f06575', BG_ROSE:  'rgba(240,101,117,0.12)', GL_ROSE:  'rgba(240,101,117,0.2)',
+    GREEN:   '#5ce0a0', BG_GREEN: 'rgba(92,224,160,0.10)',  GL_GREEN: 'rgba(92,224,160,0.2)',
+    PURPLE:  '#b48ef5', BG_PURPLE:'rgba(180,142,245,0.10)', GL_PURPLE:'rgba(180,142,245,0.2)',
+    WHITE:   '#e0e3f0',
+    PILL:    'rgba(8,8,14,0.82)',
+};
+
+let time = 0, paused = false, lastTs = null;
+let phases = [], particles = [], rafId = null;
+
+// ================================================================
+// VECTOR
+// ================================================================
+class V {
+    constructor(x, y) { this.x = x; this.y = y; }
+    add(v) { return new V(this.x + v.x, this.y + v.y); }
+    sub(v) { return new V(this.x - v.x, this.y - v.y); }
+    sc(s)  { return new V(this.x * s, this.y * s); }
+    mag()  { return Math.sqrt(this.x ** 2 + this.y ** 2); }
+    norm() { const m = this.mag(); return m ? this.sc(1 / m) : new V(0, 0); }
+    mid(v) { return new V((this.x + v.x) / 2, (this.y + v.y) / 2); }
+    rot(a) { const c = Math.cos(a), s = Math.sin(a); return new V(this.x * c - this.y * s, this.x * s + this.y * c); }
+}
+
+// ================================================================
+// CAMERA
+// ================================================================
+function setupCam(d) {
+    const { b, h, slant } = d;
+    // Full parallelogram spans x: 0 to (b+slant), y: 0 to h
+    // Plus room for labels / padding
+    const x0 = -1, y0 = -1;
+    const x1 = b + slant + 1, y1 = h + 1.5;
+    const spanX = x1 - x0, spanY = y1 - y0;
+    const PAD = Math.min(Math.max(Math.max(spanX, spanY) * CFG.padRatio, CFG.padMin), CFG.padMax);
+    const sx = W / (spanX + PAD * 2), sy = H / (spanY + PAD * 2);
+    scl = Math.min(sx, sy);
+    ox = W / 2 - (x0 + x1) / 2 * scl;
+    oy = H / 2 + (y0 + y1) / 2 * scl;
+}
+
+// Math space -> screen space (y-up in math, y-down on screen)
+function ts(v) { return { x: ox + v.x * scl, y: oy - v.y * scl }; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// ================================================================
+// PARTICLES
+// ================================================================
+function initPart() {
+    particles = [];
+    for (let i = 0; i < CFG.particleCount; i++) {
+        particles.push({
+            x: Math.random() * W, y: Math.random() * H,
+            vx: (Math.random() - .5) * .25, vy: (Math.random() - .5) * .25,
+            r: Math.random() * 1.2 + .4, a: Math.random() * .12 + .02, p: Math.random() * 6.28
+        });
+    }
+}
+function drawPart(dt) {
+    for (const p of particles) {
+        p.x += p.vx; p.y += p.vy; p.p += dt * .7;
+        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * dpr, 0, 6.28);
+        ctx.fillStyle = `rgba(160,180,255,${p.a * (.6 + .4 * Math.sin(p.p))})`; ctx.fill();
+    }
+}
+
+// ================================================================
+// EASING
+// ================================================================
+const eOB = t => { const c = 2.7; return 1 + c * Math.pow(t - 1, 3) + (c - 1) * Math.pow(t - 1, 2); };
+const eOC = t => 1 - Math.pow(1 - t, 3);
+const eOQ = t => 1 - Math.pow(1 - t, 4);
+const cl  = v => Math.max(0, Math.min(1, v));
+const pr  = (t, s, d) => cl((t - s) / d);
+
+// ================================================================
+// DRAWING HELPERS
+// ================================================================
+function drawGridDots() {
+    const lim = 35;
+    for (let gx = -lim; gx <= lim; gx++) {
+        for (let gy = -lim; gy <= lim; gy++) {
+            const s = ts(new V(gx, gy));
+            if (s.x < -5 || s.x > W + 5 || s.y < -5 || s.y > H + 5) continue;
+            const ax = (gx === 0 || gy === 0);
+            ctx.beginPath(); ctx.arc(s.x, s.y, ax ? 1.6 : 1, 0, 6.28);
+            ctx.fillStyle = ax ? CLR.AXIS : CLR.DOT; ctx.fill();
+        }
+    }
+}
+
+function drawVig() {
+    const dim = Math.max(W, H);
+    const g = ctx.createRadialGradient(W / 2, H / 2, dim * .2, W / 2, H / 2, dim * .8);
+    g.addColorStop(0, 'transparent'); g.addColorStop(1, 'rgba(4,4,8,0.55)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+function clampScreen(sx, sy, hw, hh) {
+    const m = 6;
+    return { x: Math.max(hw + m, Math.min(W - hw - m, sx)), y: Math.max(hh + m, Math.min(H - hh - m, sy)) };
+}
+
+function drawGlowDot(pos, prog, col, glowCol, radius) {
+    if (prog <= 0) return;
+    const s = ts(pos);
+    if (s.x < -20 || s.x > W + 20 || s.y < -20 || s.y > H + 20) return;
+    const r = (radius || CFG.dotRadius) * scl;
+    ctx.save();
+    ctx.globalAlpha = 0.3 * prog;
+    ctx.shadowColor = glowCol; ctx.shadowBlur = r * 2;
+    ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 6.28);
+    ctx.fillStyle = glowCol; ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = prog;
+    ctx.beginPath(); ctx.arc(s.x, s.y, r, 0, 6.28);
+    ctx.fillStyle = col; ctx.fill();
+    ctx.globalAlpha = 0.4 * prog;
+    ctx.beginPath(); ctx.arc(s.x - r * 0.25, s.y - r * 0.25, r * 0.35, 0, 6.28);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.restore();
+}
+
+function drawRectOutline(x0, y0, x1, y1, prog, col, glowCol) {
+    if (prog <= 0) return;
+    const tl = ts(new V(x0, y1)), br = ts(new V(x1, y0));
+    const sx = tl.x, sy = tl.y, sw = br.x - tl.x, sh = br.y - tl.y;
+    ctx.save();
+    ctx.globalAlpha = 0.15 * prog;
+    ctx.shadowColor = glowCol; ctx.shadowBlur = 15;
+    ctx.strokeStyle = glowCol; ctx.lineWidth = 3;
+    ctx.strokeRect(sx, sy, sw, sh);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.6 * prog;
+    ctx.strokeStyle = col; ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.strokeRect(sx, sy, sw, sh);
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+function pill(text, pos, prog, col, fs) {
+    if (prog <= 0) return;
+    const s = ts(pos);
+    if (s.x < -60 || s.x > W + 60 || s.y < -60 || s.y > H + 60) return;
+    const sc = .7 + .3 * eOB(Math.min(1, prog * 1.2));
+    fs = fs || 12;
+    ctx.save();
+    ctx.font = `500 ${fs}px 'JetBrains Mono',monospace`;
+    const m = ctx.measureText(text); const pw = m.width + 18, ph = fs + 14, r = ph / 2;
+    const clamped = clampScreen(s.x, s.y, pw / 2 * sc, ph / 2 * sc);
+    ctx.globalAlpha = prog; ctx.translate(clamped.x, clamped.y); ctx.scale(sc, sc);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = CLR.PILL; ctx.beginPath(); ctx.roundRect(-pw / 2, -ph / 2, pw, ph, r); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.globalAlpha = .4 * prog; ctx.stroke();
+    ctx.globalAlpha = prog; ctx.fillStyle = col; ctx.fillText(text, 0, .5);
+    ctx.restore();
+}
+
+function areaLabel(text, center, prog, col, fs) {
+    if (prog <= 0) return;
+    const s = ts(center);
+    const sc = .5 + .5 * eOB(Math.min(1, prog * 1.3));
+    ctx.save(); ctx.globalAlpha = prog * .85; ctx.translate(s.x, s.y); ctx.scale(sc, sc);
+    ctx.font = `600 ${fs || 22}px 'Inter',sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const m = ctx.measureText(text);
+    const pw = m.width + 20, ph = (fs || 22) + 14, r2 = ph / 2;
+    ctx.fillStyle = 'rgba(8,8,14,0.88)';
+    ctx.beginPath(); ctx.roundRect(-pw / 2, -ph / 2, pw, ph, r2); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.globalAlpha = .4 * prog; ctx.stroke();
+    ctx.globalAlpha = prog * .85;
+    ctx.fillStyle = col; ctx.fillText(text, 0, 0); ctx.restore();
+}
+
+function callout(text, pos, prog, col) {
+    if (prog <= 0) return;
+    const s = ts(pos);
+    const sc = .6 + .4 * eOB(Math.min(1, prog * 1.3));
+    ctx.save();
+    ctx.font = "500 13px 'JetBrains Mono',monospace";
+    const m = ctx.measureText(text); const pw = m.width + 22, ph = 30, r2 = 8;
+    const clamped = clampScreen(s.x, s.y, pw / 2 * sc, ph / 2 * sc);
+    ctx.globalAlpha = prog; ctx.translate(clamped.x, clamped.y); ctx.scale(sc, sc);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = 'rgba(8,8,14,0.88)'; ctx.beginPath(); ctx.roundRect(-pw / 2, -ph / 2, pw, ph, r2); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.globalAlpha = .5 * prog; ctx.stroke();
+    ctx.globalAlpha = prog; ctx.fillStyle = col; ctx.fillText(text, 0, 1);
+    ctx.restore();
+}
+
+// ================================================================
+// POLYGON DRAWING HELPERS
+// ================================================================
+
+// Draw a filled polygon from an array of math-space V objects
+function polyFill(pts, fillStyle, alpha) {
+    if (alpha <= 0 || pts.length < 2) return;
+    const sp = pts.map(p => ts(p));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(sp[0].x, sp[0].y);
+    for (let i = 1; i < sp.length; i++) ctx.lineTo(sp[i].x, sp[i].y);
+    ctx.closePath();
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+    ctx.restore();
+}
+
+// Draw a stroked polygon outline from an array of math-space V objects
+function polyStroke(pts, strokeStyle, alpha, lw, dash) {
+    if (alpha <= 0 || pts.length < 2) return;
+    const sp = pts.map(p => ts(p));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.moveTo(sp[0].x, sp[0].y);
+    for (let i = 1; i < sp.length; i++) ctx.lineTo(sp[i].x, sp[i].y);
+    ctx.closePath();
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lw || 2;
+    if (dash) ctx.setLineDash(dash);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+// Draw a dashed vertical line in math space from (x, y0) to (x, y1)
+function dashLine(x, yLo, yHi, prog, col) {
+    if (prog <= 0) return;
+    const p0 = ts(new V(x, yLo));
+    const p1 = ts(new V(x, yHi));
+    // Animate the line drawing from bottom to top
+    const midY = lerp(p0.y, p1.y, prog);
+    ctx.save();
+    ctx.globalAlpha = cl(prog * 2);
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p0.x, midY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+}
+
+// Draw a horizontal double-headed arrow dimension label in math space
+function dimArrow(xLo, xHi, y, prog, col, label) {
+    if (prog <= 0) return;
+    const p0 = ts(new V(xLo, y));
+    const p1 = ts(new V(xHi, y));
+    ctx.save();
+    ctx.globalAlpha = prog;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    const aw = 8; // arrowhead size
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.stroke();
+    // Left arrowhead
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p0.x + aw, p0.y - aw * 0.4);
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p0.x + aw, p0.y + aw * 0.4);
+    ctx.stroke();
+    // Right arrowhead
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p1.x - aw, p1.y - aw * 0.4);
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p1.x - aw, p1.y + aw * 0.4);
+    ctx.stroke();
+    ctx.restore();
+    // Label at center
+    pill(label, new V((xLo + xHi) / 2, y), prog, col);
+}
+
+// Draw a vertical double-headed arrow dimension label in math space
+function dimArrowV(x, yLo, yHi, prog, col, label) {
+    if (prog <= 0) return;
+    const p0 = ts(new V(x, yLo));
+    const p1 = ts(new V(x, yHi));
+    ctx.save();
+    ctx.globalAlpha = prog;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    const aw = 8;
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p1.x, p1.y);
+    ctx.stroke();
+    // Bottom arrowhead (points downward in screen space, so lower y on screen)
+    ctx.beginPath();
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p0.x - aw * 0.4, p0.y - aw);
+    ctx.moveTo(p0.x, p0.y);
+    ctx.lineTo(p0.x + aw * 0.4, p0.y - aw);
+    ctx.stroke();
+    // Top arrowhead
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p1.x - aw * 0.4, p1.y + aw);
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p1.x + aw * 0.4, p1.y + aw);
+    ctx.stroke();
+    ctx.restore();
+    pill(label, new V(x, (yLo + yHi) / 2), prog, col);
+}
+
+// ================================================================
+// RENDER
+// ================================================================
+function render() {
+    ctx.fillStyle = CLR.BG; ctx.fillRect(0, 0, W, H);
+    drawPart(0.016);
+    drawGridDots();
+
+    const d = EXAMPLES[idx];
+    const { b, h, slant } = d;
+    const area = b * h;
+
+    // Phase index
+    let pi = 0;
+    for (let i = phases.length - 1; i >= 0; i--) { if (time >= phases[i].t[0]) { pi = i; break; } }
+
+    // ── Progress values ──
+    const pDraw    = eOC(pr(time, 0.2, 2.2));
+    const pLabel   = eOC(pr(time, phases[1].t[0] + 0.2, 1.2));
+    const pCut     = eOC(pr(time, phases[2].t[0] + 0.2, 1.5));
+    const pColor   = eOC(pr(time, phases[3].t[0] + 0.2, 1.0));
+    const pSlide   = eOC(pr(time, phases[4].t[0] + 0.3, 2.2));
+    const pForm    = eOC(pr(time, phases[5].t[0] + 0.2, 1.2));
+    const pMeasure = eOC(pr(time, phases[6].t[0] + 0.2, 1.2));
+    const pDone    = eOC(pr(time, phases[7].t[0] + 0.2, 1.0));
+
+    // ────────────────────────────────────────────────
+    // Parallelogram vertices (math space, y-up):
+    //   BL = (0,   0)
+    //   BR = (b,   0)
+    //   TR = (b + slant, h)
+    //   TL = (slant,     h)
+    //
+    // Cut triangle vertices:
+    //   A = (0,     0)
+    //   B = (slant, 0)
+    //   C = (slant, h)
+    //
+    // After sliding b units right:
+    //   A' = (b,         0)
+    //   B' = (b + slant, 0)
+    //   C' = (b + slant, h)
+    // ────────────────────────────────────────────────
+
+    const BL = new V(0, 0);
+    const BR = new V(b, 0);
+    const TR = new V(b + slant, h);
+    const TL = new V(slant, h);
+
+    // Triangle: A(0,0), B(slant,0), C(slant,h)
+    const triA = new V(0, 0);
+    const triB = new V(slant, 0);
+    const triC = new V(slant, h);
+
+    // Slid triangle (phase 4+): offset by slideAmount * b in x
+    const slideAmount = (pi >= 4) ? pSlide : 0;
+    const dx = b * slideAmount;
+
+    const triA2 = new V(triA.x + dx, triA.y);
+    const triB2 = new V(triB.x + dx, triB.y);
+    const triC2 = new V(triC.x + dx, triC.y);
+
+    // ── Phase 0-3: Draw the parallelogram body ──
+    // Always draw the blue "main body" (parallelogram minus triangle)
+    // Main trapezoid body: BL->BR->TR->TL, with triangle removed on the left
+    // We draw the full parallelogram first, then overlay the triangle in gold later
+
+    if (pi >= 0 && pDraw > 0) {
+        // Full parallelogram fill — blue, semi-transparent
+        const paraAlpha = pDraw * 0.22;
+        polyFill([BL, BR, TR, TL], CLR.BG_BLUE.replace('0.12', String(paraAlpha * 2)), paraAlpha);
+
+        // Parallelogram outline
+        polyStroke([BL, BR, TR, TL], CLR.BLUE, pDraw * 0.8, 2);
+    }
+
+    // ── Phase 3+: Color the triangle ──
+    // When sliding begins, we draw the main body (trapezoid) in blue and the sliding
+    // triangle separately in gold.
+
+    if (pi >= 3 || pColor > 0) {
+        // Show the left triangle highlighted (gold fill)
+        const triAlpha = pColor;
+        if (triAlpha > 0 && pi < 4) {
+            // Triangle still in place
+            polyFill([triA, triB, triC], CLR.GOLD, triAlpha * 0.35);
+            polyStroke([triA, triB, triC], CLR.GOLD, triAlpha * 0.9, 2);
+        }
+    }
+
+    // ── Phase 4: Slide the triangle ──
+    if (pi >= 4) {
+        // Main body without the left triangle: trapezoid BL→BR→TR→TL→cut
+        // Actually: the "main body" is the parallelogram minus the left triangle.
+        // That body stays fixed: it's the trapezoid (slant,0)→(b,0)→(b+slant,h)→(slant,h)
+        const bodyBL = new V(slant, 0);
+        const bodyBR = new V(b, 0);
+        const bodyTR = new V(b + slant, h);
+        const bodyTL = new V(slant, h);
+        polyFill([bodyBL, bodyBR, bodyTR, bodyTL], CLR.BG_BLUE.replace('0.12', '0.25'), 0.25);
+        polyStroke([bodyBL, bodyBR, bodyTR, bodyTL], CLR.BLUE, 0.7, 2);
+
+        // Sliding triangle (gold)
+        polyFill([triA2, triB2, triC2], CLR.GOLD, 0.35);
+        polyStroke([triA2, triB2, triC2], CLR.GOLD, 0.9, 2);
+    }
+
+    // ── Phase 5+: Form the rectangle ──
+    if (pi >= 5) {
+        // Show the complete rectangle outline with glow
+        drawRectOutline(0, 0, b, h, pForm, CLR.GREEN, CLR.GL_GREEN);
+
+        // Fill the rectangle gently
+        polyFill([new V(0,0), new V(b,0), new V(b,h), new V(0,h)], CLR.BG_GREEN.replace('0.10','0.18'), pForm * 0.18);
+    }
+
+    // ── Cut line (phases 2-4, disappears when sliding begins) ──
+    if (pi === 2 || pi === 3) {
+        dashLine(slant, 0, h, pCut, CLR.ROSE);
+        // Little marker dot at the top of the cut
+        if (pCut > 0.5) {
+            drawGlowDot(new V(slant, h), (pCut - 0.5) * 2, CLR.ROSE, CLR.GL_ROSE, 0.18);
+        }
+    }
+
+    // ── Phase 1: Dimension labels (base and height dashed indicator) ──
+    if (pi >= 1 && pi < 5) {
+        const labelP = pLabel;
+        // Base arrow below the parallelogram
+        dimArrow(0, b, -0.65, labelP, CLR.GOLD, `b = ${b}`);
+        // Height dashed vertical line to the right of the figure
+        const hLineX = b + slant + 0.5;
+        dashLine(hLineX, 0, h, labelP, CLR.GREEN);
+        dimArrowV(hLineX + 0.55, 0, h, labelP * cl((labelP - 0.3) / 0.7), CLR.GREEN, `h = ${h}`);
+    }
+
+    // ── Phase 6+: Measure labels on the rectangle ──
+    if (pi >= 6) {
+        dimArrow(0, b, -0.65, pMeasure, CLR.GOLD, `b = ${b}`);
+        dimArrowV(b + 0.55, 0, h, pMeasure, CLR.GREEN, `h = ${h}`);
+        // Area label in the center of the rectangle
+        areaLabel(`A = ${b} × ${h} = ${area}`, new V(b / 2, h / 2), pMeasure, CLR.ROSE, Math.min(22, Math.max(12, 140 / Math.max(b, h))));
+    }
+
+    // ── Phase 7 (done): Final identity ──
+    if (pi >= 7) {
+        areaLabel(`A = b × h = ${area}`, new V(b / 2, h / 2), pDone, CLR.GREEN, Math.min(24, Math.max(13, 160 / Math.max(b, h))));
+    }
+
+    // ── Phase 0: Initial dimension pills (before label phase) ──
+    if (pi === 0) {
+        pill(`base = ${b}`, new V(b / 2, -0.5), pDraw, CLR.BLUE);
+    }
+
+    drawVig();
+
+    // ── Equation bar ──
+    const eqBar = document.getElementById('eq-bar');
+    if (phases[pi] && phases[pi].eq) {
+        eqBar.classList.add('active');
+        eqBar.innerHTML = phases[pi].eq;
+    } else {
+        eqBar.classList.remove('active');
+        eqBar.innerHTML = '<span class="c-a">A</span> <span class="c-dim">=</span> <span class="c-b">base</span> <span class="c-dim">&times;</span> <span class="c-g">height</span>';
+    }
+
+    updatePanel(pi);
+}
+
+// ================================================================
+// PANEL
+// ================================================================
+function jumpToPhase(i) {
+    time = phases[i].t[0] + 0.05;
+    paused = true; lastTs = null;
+    document.getElementById('scrubber').value = time / CFG.dur;
+    updPlayBtn(); render();
+}
+
+function buildPanel() {
+    const d = EXAMPLES[idx];
+    const { b, h, slant } = d;
+    const area = b * h;
+
+    const banner = document.getElementById('scenario-banner');
+    banner.innerHTML = `
+        <div class="title">${d.title}</div>
+        <div class="desc">${d.desc}</div>
+        <div class="given">
+            <span class="given-tag blue">b = ${b}</span>
+            <span class="given-tag green">h = ${h}</span>
+            <span class="given-tag gold">slant = ${slant}</span>
+            <span class="given-tag rose">Area = ${area}</span>
+        </div>`;
+
+    const cont = document.getElementById('steps');
+    cont.innerHTML = '';
+    phases.forEach((ph, i) => {
+        const step = document.createElement('div');
+        step.className = 'step';
+        step.setAttribute('role', 'listitem');
+        step.setAttribute('tabindex', '0');
+        step.setAttribute('aria-label', `Step ${i + 1}: ${ph.title}`);
+        step.innerHTML = `
+            <div class="step-timeline">
+                <div class="step-dot">${i + 1}</div>
+                ${i < phases.length - 1 ? '<div class="step-line"></div>' : ''}
+            </div>
+            <div class="step-content">
+                <div class="step-title">${ph.title}</div>
+                <div class="step-body">${ph.body}</div>
+                ${ph.eq ? `<div class="step-equation">${ph.eq}</div>` : ''}
+            </div>`;
+        step.addEventListener('click', () => jumpToPhase(i));
+        step.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jumpToPhase(i); }
+        });
+        cont.appendChild(step);
+    });
+
+    document.getElementById('eq-builder').innerHTML =
+        `<span class="c-a">A</span>&nbsp;<span class="c-dim">=</span>&nbsp;<span class="c-b">base</span>&nbsp;<span class="c-dim">&times;</span>&nbsp;<span class="c-g">height</span>`;
+
+    document.getElementById('nav-label').textContent = `${idx + 1} / ${EXAMPLES.length}`;
+    document.getElementById('btn-prev').disabled = (idx === 0);
+    document.getElementById('btn-next').disabled = (idx === EXAMPLES.length - 1);
+}
+
+function updatePanel(phaseIdx) {
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((s, i) => {
+        s.classList.toggle('active', i === phaseIdx);
+        s.classList.toggle('revealed', i < phaseIdx);
+        s.classList.toggle('completed', i < phaseIdx);
+    });
+
+    const active = document.querySelector('.step.active');
+    if (active) active.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    const d = EXAMPLES[idx];
+    const { b, h } = d;
+    const area = b * h;
+    const eb = document.getElementById('eq-builder');
+
+    if (phaseIdx >= phases.length - 1) {
+        eb.innerHTML = `<span class="c-a">A</span>&nbsp;<span class="c-dim">=</span>&nbsp;<span class="c-b">${b}</span>&nbsp;<span class="c-dim">&times;</span>&nbsp;<span class="c-g">${h}</span>&nbsp;<span class="c-dim">=</span>&nbsp;<span class="c-r">${area}</span>&nbsp;<span class="c-g">&check;</span>`;
+        eb.classList.add('active');
+    } else if (phaseIdx >= 6) {
+        eb.innerHTML = phases[phaseIdx].eq || `<span class="c-a">A</span>&nbsp;<span class="c-dim">=</span>&nbsp;<span class="c-b">${b}</span>&nbsp;<span class="c-dim">&times;</span>&nbsp;<span class="c-g">${h}</span>&nbsp;<span class="c-dim">=</span>&nbsp;<span class="c-r">${area}</span>`;
+        eb.classList.add('active');
+    } else {
+        eb.innerHTML = `<span class="c-a">A</span>&nbsp;<span class="c-dim">=</span>&nbsp;<span class="c-b">base</span>&nbsp;<span class="c-dim">&times;</span>&nbsp;<span class="c-g">height</span>`;
+        eb.classList.remove('active');
+    }
+}
+
+// ================================================================
+// ANIMATION LOOP
+// ================================================================
+function tick(t) {
+    const dt = lastTs ? (t - lastTs) / 1000 : 0;
+    lastTs = t;
+    if (!paused) {
+        time += dt;
+        if (time >= CFG.dur) { time = CFG.dur; paused = true; updPlayBtn(); }
+        document.getElementById('scrubber').value = time / CFG.dur;
+    }
+    render();
+    rafId = requestAnimationFrame(tick);
+}
+
+// ================================================================
+// UI
+// ================================================================
+function loadExample() {
+    phases = buildPhases(EXAMPLES[idx]);
+    time = 0; paused = false; lastTs = null;
+    setupCam(EXAMPLES[idx]);
+    buildPanel();
+    updPlayBtn();
+}
+
+function updPlayBtn() {
+    document.getElementById('btn-play').innerHTML = paused ? '&#9654;' : '&#9208;';
+}
+
+document.getElementById('btn-play').onclick = () => {
+    if (time >= CFG.dur) time = 0; paused = !paused; lastTs = null; updPlayBtn();
+};
+document.getElementById('btn-replay').onclick = () => {
+    time = 0; paused = false; lastTs = null; updPlayBtn();
+};
+document.getElementById('scrubber').oninput = e => {
+    paused = true; time = parseFloat(e.target.value) * CFG.dur; lastTs = null; updPlayBtn(); render();
+};
+document.getElementById('btn-next').onclick = () => {
+    if (idx < EXAMPLES.length - 1) { idx++; loadExample(); }
+};
+document.getElementById('btn-prev').onclick = () => {
+    if (idx > 0) { idx--; loadExample(); }
+};
+
+function onKeydown(e) {
+    if (e.key === 'ArrowRight' && idx < EXAMPLES.length - 1) { idx++; loadExample(); }
+    else if (e.key === 'ArrowLeft' && idx > 0) { idx--; loadExample(); }
+    else if (e.key === ' ' && document.activeElement === document.body) { e.preventDefault(); document.getElementById('btn-play').click(); }
+}
+document.addEventListener('keydown', onKeydown);
+
+function resize() {
+    const wrap = document.getElementById('canvas-wrap');
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    canvas.width = W * dpr; canvas.height = H * dpr;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    setupCam(EXAMPLES[idx]); initPart();
+}
+
+// roundRect polyfill
+if (!ctx.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (typeof r === 'number') r = [r]; const [tl] = r;
+        this.moveTo(x + tl, y); this.arcTo(x + w, y, x + w, y + h, tl); this.arcTo(x + w, y + h, x, y + h, tl);
+        this.arcTo(x, y + h, x, y, tl); this.arcTo(x, y, x + w, y, tl);
+    };
+}
+
+window.addEventListener('beforeunload', () => {
+    if (rafId) cancelAnimationFrame(rafId);
+    document.removeEventListener('keydown', onKeydown);
+});
+
+window.addEventListener('resize', resize);
+resize();
+loadExample();
+rafId = requestAnimationFrame(tick);
+</script>
+</body>
+</html>
